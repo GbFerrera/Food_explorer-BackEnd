@@ -1,13 +1,13 @@
 const {Router} = require("express")
-const foodsRouter = Router()
+const foodsRoutes = Router()
 
 const FoodsController = require("../controllers/foodsControllers")
 
 const foodsControllers = new FoodsController
 
 
-foodsRouter.post("/", foodsControllers.create)
+foodsRoutes.post("/:user_id", foodsControllers.create)
 
 
 
-module.exports = foodsRouter
+module.exports = foodsRoutes

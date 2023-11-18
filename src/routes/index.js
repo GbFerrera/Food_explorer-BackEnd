@@ -2,10 +2,10 @@ const {Router} = require("express")
 const routes = Router()
 
 const usersRouter = require("./usersRouter")
-const foodsRouter = require("./foodsRouter")
+const foodsRoutes = require("./foodsRouter")
 
 routes.use("/users", usersRouter)
-routes.use("/foods" , foodsRouter)
+routes.use("/foods" , foodsRoutes)
 
 
 
