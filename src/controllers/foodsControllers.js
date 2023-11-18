@@ -1,6 +1,4 @@
 const knex = require("../database/knex")
-const sqliteConnetion = require("../database/sqlite")
-
 
 class FoodsController {
 
@@ -12,8 +10,6 @@ class FoodsController {
   const [food_id] = await knex("foods").insert({
 
     avatar,title,category,price,description,user_id
-
-
   })
 
 
@@ -31,6 +27,24 @@ class FoodsController {
   response.json("criado com sucesso")
 
 
+
+
+ }
+
+ async show (request,response){
+
+  const {id} = request.params
+
+  const food = await knex("foods").where({id}).first()
+  const ingredients = await knex("ingredients").where({food_id: id})
+
+
+  return response.json({
+
+   ...food,
+   ingredients
+
+  })
 
 
  }
