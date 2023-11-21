@@ -5,7 +5,7 @@ const UsersController = require("../controllers/usersControllers")
 const userscontroller = new UsersController
 
 usersRouter.post("/",userscontroller.create)
-
+usersRouter.put('/:id',userscontroller.update)
 
 
 

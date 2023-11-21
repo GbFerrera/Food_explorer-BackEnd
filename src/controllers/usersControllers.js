@@ -29,6 +29,57 @@ const sqliteConnetion = require("../database/sqlite")
 
 
   }
+
+  async update(request,response){
+
+   const {name, password, new_password, email } = request.body
+   const {id} = request.params
+
+   const database = await sqliteConnetion()
+
+   const user = await database.get("SELECT * FROM users WHERE id = (?)", [id])
+
+   if(!user) {
+
+    throw new AppError("Usuário não encontrado")
+
+   }
+   
+   const userWithUpdatedEmail = await database.get("SELECT * FROM users WHERE email = (?)", [email])
+
+
+   if(userWithUpdatedEmail && userWithUpdatedEmail.id !== user.id){
+
+    throw new AppError("Este e-mail já está em uso.")
+
+   }
+  
+   user.name = name ?? user.name
+   user.email= email ?? user.email
+
+   if(!password && new_password) {
+    throw new AppError("Você informar a senha antiga para definir a nova senha")
+   }
+
+   if(password !== user.password) {
+
+    throw new AppError("A senha antiga não confere.")
+
+   }
+
+   await database.run(`
+   UPDATE users SET
+   name = ?,
+   email = ?,
+   password = ?,
+   updated_at = DATETIME('now')
+   WHERE id = ?`, 
+   [user.name, user.email, user.new_password, id]
+ )
+return response.json("Atualizado com sucesso")
+
+
+  }
   
 }
 
