@@ -2,11 +2,12 @@ const {Router} = require("express")
 const routes = Router()
 
 const usersRouter = require("./usersRouter")
-const foodsRoutes = require("./foodsRouter")
+const foodsRouter = require("./foodsRouter")
+const favoritesRouter = require("./favoritesRouter")
 
 routes.use("/users", usersRouter)
-routes.use("/foods" , foodsRoutes)
-
+routes.use("/foods" , foodsRouter)
+routes.use("/favorites" , favoritesRouter)
 
 
 
