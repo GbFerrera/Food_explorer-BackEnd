@@ -60,6 +60,27 @@ await knex("foods").where( {id} ).delete()
 
 } 
 
+async update (request, response){
+ 
+
+  const { avatar,title, category, ingredients,price,description } = request.body
+  const {user_id} = request.params
+  const {food_id} = request.params
+
+
+
+   await knex("foods")
+   .where({ id: food_id, user_id: user_id })
+   .update({ avatar,title, category,price,description })
+
+
+  
+
+response.json("Atualizado com sucesso")
+
+
+
+}
 
 
 
