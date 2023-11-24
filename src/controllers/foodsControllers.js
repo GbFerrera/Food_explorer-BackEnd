@@ -62,16 +62,43 @@ await knex("foods").where( {id} ).delete()
 
 async update (request, response){
  
-
+  const {user_id, food_id} = request.params
   const { avatar,title, category, ingredients,price,description } = request.body
-  const {user_id} = request.params
-  const {food_id} = request.params
+  
 
 
 
    await knex("foods")
-   .where({ id: food_id, user_id: user_id })
-   .update({ avatar,title, category,price,description })
+   .where({ id: food_id})
+   .update({ avatar,title, category,price,description,user_id: user_id })
+
+
+   const existingIngredients = await knex('ingredients')
+   .where({food_id})
+   .select('ingredients');
+
+
+   const existingIngredientNames = existingIngredients.map(ingredient => ingredient.ingredients);
+
+   for (const ingredient of ingredients) {
+    if (!existingIngredientNames.includes(ingredient)) {
+      await knex('ingredients').insert({
+        food_id,
+        ingredients: ingredient
+      });
+    }
+  }
+
+  const removedIngredients = existingIngredientNames.filter(
+    existingIngredient => !ingredients.includes(existingIngredient)
+  );
+
+
+  for (const removedIngredient of removedIngredients) {
+    await knex('ingredients')
+      .where({ ingredients: removedIngredient })
+      .del();
+  }
 
 
   
