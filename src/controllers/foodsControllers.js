@@ -5,7 +5,7 @@ class FoodsController {
  async create(request,response) {
 
   const { avatar,title, category, ingredients,price,description } = request.body
-  const {user_id} = request.params
+  const user_id = request.user.id
 
   const [food_id] = await knex("foods").insert({
 
@@ -62,7 +62,8 @@ await knex("foods").where( {id} ).delete()
 
 async update (request, response){
  
-  const {user_id, food_id} = request.params
+  const {food_id} = request.params
+  const user_id = request.user.id
   const { avatar,title, category, ingredients,price,description } = request.body
   
 
