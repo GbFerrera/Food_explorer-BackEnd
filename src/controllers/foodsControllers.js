@@ -1,23 +1,16 @@
-const knex = require("../database/knex")
-const DiskStorage = require("../providers/DiskStorage")
+const knex = require("../database/knex");
+const DiskStorage = require("../providers/DiskStorage");
 
 class FoodsController {
-
   async create(request, response) {
+    const { title, category, ingredient, price, description } = request.body;
+    const user_id = request.user.id;
 
-    const { title, category, ingredient, price, description } = request.body
-    const user_id = request.user.id
+    const avatarFileName = request.file.filename;
 
+    const diskStorage = new DiskStorage();
 
-    const avatarFileName = request.file.filename
-
-
-    const diskStorage = new DiskStorage
-
-    const filename = await diskStorage.saveFile(avatarFileName)
-
-
-
+    const filename = await diskStorage.saveFile(avatarFileName);
 
     const [food_id] = await knex("foods").insert({
       avatar: filename,
@@ -25,109 +18,95 @@ class FoodsController {
       category,
       price,
       description,
-      user_id
-    })
+      user_id,
+    });
 
-
-    const ingredientsInsert = ingredient.map(ingredient => {
+    const ingredientsInsert = ingredient.map((ingredient) => {
       return {
         food_id,
-        ingredients: ingredient
-      }
-    })
+        ingredients: ingredient,
+      };
+    });
 
-    await knex("ingredients").insert(ingredientsInsert)
+    await knex("ingredients").insert(ingredientsInsert);
 
-
-    response.json("criado com sucesso")
-
-
-
-
+    response.json("criado com sucesso");
   }
 
   async show(request, response) {
+    const { id } = request.params;
 
-    const { id } = request.params
-
-    const food = await knex("foods").where({ id }).first()
-    const ingredients = await knex("ingredients").where({ food_id: id })
-
+    const food = await knex("foods").where({ id }).first();
+    const ingredients = await knex("ingredients").where({ food_id: id });
 
     return response.json({
-
       ...food,
-      ingredients
-
-    })
-
-
+      ingredients,
+    });
   }
 
   async delete(request, response) {
+    const { id } = request.params;
 
-    const { id } = request.params
+    await knex("foods").where({ id }).delete();
 
-    await knex("foods").where({ id }).delete()
-
-    return response.json("Apagado com sucesso!")
-
-
+    return response.json("Apagado com sucesso!");
   }
 
   async update(request, response) {
+    const { id } = request.params;
+    const user_id = request.user.id;
+    const { title, category, ingredient, price, description } = request.body;
 
-    const { food_id } = request.params
-    const user_id = request.user.id
-    const { avatar, title, category, ingredients, price, description } = request.body
+    const avatarFilename = request.file.filename;
 
+    const diskStorage = new DiskStorage();
 
+    const food = await knex("foods").where({ id }).first();
 
+    console.log(food, ingredient);
 
-    await knex("foods")
-      .where({ id: food_id })
-      .update({ avatar, title, category, price, description, user_id: user_id })
+    if (food.avatar) {
+      await diskStorage.deleteFile(food.avatar);
+    }
 
+    const filename = await diskStorage.saveFile(avatarFilename);
+
+    food.avatar = food.avatar ?? filename;
+    food.title = title ?? food.title;
+    food.description = description ?? food.description;
+    food.category = category ?? food.category;
+    food.price = price ?? food.price;
+    food.user_id = user_id ?? food.user_id;
+
+    await knex("foods").where({ id }).update(food);
 
     const existingIngredients = await knex('ingredients')
-      .where({ food_id })
-      .select('ingredients');
-
-
-    const existingIngredientNames = existingIngredients.map(ingredient => ingredient.ingredients);
-
-    for (const ingredient of ingredients) {
-      if (!existingIngredientNames.includes(ingredient)) {
-        await knex('ingredients').insert({
-          food_id,
-          ingredients: ingredient
-        });
-      }
-    }
-
-    const removedIngredients = existingIngredientNames.filter(
-      existingIngredient => !ingredients.includes(existingIngredient)
-    );
-
-
-    for (const removedIngredient of removedIngredients) {
-      await knex('ingredients')
-        .where({ ingredients: removedIngredient })
-        .del();
-    }
-
-
-
-
-    response.json("Atualizado com sucesso")
-
-
-
+    .where({ food_id: id })
+    .select('ingredients');
+  
+  const existingIngredientNames = existingIngredients.map(ingredient => ingredient.ingredients);
+  
+  const ingredientArray = Array.isArray(ingredient) ? ingredient : [ingredient];
+  
+ 
+  const hasChanges = !arraysAreEqual(existingIngredientNames, ingredientArray);
+  
+  if (hasChanges) {
+    
+    await knex('ingredients').where({ food_id: id }).del();
+  
+    await knex('ingredients').insert(ingredientArray.map(ingredientName => ({ food_id: id, ingredients: ingredientName })));
   }
+  
+  function arraysAreEqual(arr1, arr2) {
+    return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
+  }
+    
 
 
-
+    response.json("Atualizado com sucesso");
+  }
 }
 
-
-module.exports = FoodsController
+module.exports = FoodsController;

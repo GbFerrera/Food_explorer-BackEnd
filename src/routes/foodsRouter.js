@@ -19,6 +19,6 @@ foodsRouter.use(ensureAuthenticated)
 foodsRouter.post("/", upload.single("avatar"), foodsControllers.create)
 foodsRouter.get("/:id", foodsControllers.show)
 foodsRouter.delete("/:id",upload.single("avatar"), foodsControllers.delete)
-foodsRouter.put("/:food_id",upload.single("avatar"), foodsControllers.update)
+foodsRouter.put("/:id",upload.single("avatar"), foodsControllers.update)
 foodsRouter.patch("/avatar/:food_id" , upload.single("avatar"), foodAvatarController.update)
 module.exports = foodsRouter
