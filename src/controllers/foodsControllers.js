@@ -34,15 +34,31 @@ class FoodsController {
   }
 
   async show(request, response) {
-    const { id } = request.params;
+    try {
+      const { id } = request.params;
+  
+      const food = await knex("foods").where({ id }).first();
 
-    const food = await knex("foods").where({ id }).first();
-    const ingredients = await knex("ingredients").where({ food_id: id });
+     
+  
+      if (!food) {
+        return response.status(404).json({ error: "Produto não encontrado" });
+      }
+  
+      const ingredients = await knex("ingredients").where({ food_id: id });
 
-    return response.json({
-      ...food,
-      ingredients,
-    });
+
+  
+      return response.json({
+        avatar: food.avatar, 
+        title: food.title,
+        description: food.description,
+        ingredients: ingredients.map(ingredientName => ingredientName.ingredients)
+      });
+    } catch (error) {
+      console.error("Erro ao obter dados do produto:", error);
+      return response.status(500).json({ error: "Erro interno do servidor" });
+    }
   }
 
   async delete(request, response) {
@@ -106,6 +122,19 @@ class FoodsController {
 
 
     response.json("Atualizado com sucesso");
+  }
+
+  async index (request,response){
+
+    try {
+      const foods = await knex("foods").select("*");
+      return response.json(foods);
+    } catch (error) {
+      console.error("Erro ao obter dados das comidas:", error);
+      return response.status(500).json({ error: "Erro interno do servidor" });
+    }
+   
+
   }
 }
 
