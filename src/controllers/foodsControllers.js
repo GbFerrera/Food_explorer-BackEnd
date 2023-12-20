@@ -64,6 +64,17 @@ class FoodsController {
   async delete(request, response) {
     const { id } = request.params;
 
+    const food = await knex("foods").where({id}).first()
+
+    const diskStorage = new DiskStorage()
+
+    if (food.avatar) {
+
+      await diskStorage.deleteFile(food.avatar)
+   
+    }
+
+
     await knex("foods").where({ id }).delete();
 
     return response.json("Apagado com sucesso!");
