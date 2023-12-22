@@ -135,18 +135,26 @@ class FoodsController {
     response.json("Atualizado com sucesso");
   }
 
-  async index (request,response){
-
+  async index(request, response) {
     try {
-      const foods = await knex("foods").select("*");
+      const { term } = request.query;
+  
+      let query = knex("foods").select("*");
+  
+      if (term) {
+        // Use LIKE para pesquisa case-insensitive
+        query = query.where('title', 'like', `%${term}%`);
+      }
+  
+      const foods = await query;
       return response.json(foods);
     } catch (error) {
       console.error("Erro ao obter dados das comidas:", error);
       return response.status(500).json({ error: "Erro interno do servidor" });
     }
-   
-
   }
+  
+  
 }
 
 module.exports = FoodsController;
