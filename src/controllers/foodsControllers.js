@@ -53,6 +53,7 @@ class FoodsController {
         avatar: food.avatar, 
         title: food.title,
         description: food.description,
+        price: food.price,
         ingredients: ingredients.map(ingredientName => ingredientName.ingredients)
       });
     } catch (error) {
@@ -85,55 +86,50 @@ class FoodsController {
     const user_id = request.user.id;
     const { title, category, ingredient, price, description } = request.body;
 
-    const avatarFilename = request.file.filename;
+    const avatarFilename = request.file?.filename;
 
     const diskStorage = new DiskStorage();
 
     const food = await knex("foods").where({ id }).first();
 
-    console.log(food, ingredient);
 
-    if (food.avatar) {
+    if (avatarFilename && food.avatar) {
       await diskStorage.deleteFile(food.avatar);
     }
 
-    const filename = await diskStorage.saveFile(avatarFilename);
+    const filename = avatarFilename ? await diskStorage.saveFile(avatarFilename) : food.avatar;
 
-    food.avatar = food.avatar ?? filename;
-    food.title = title ?? food.title;
-    food.description = description ?? food.description;
-    food.category = category ?? food.category;
-    food.price = price ?? food.price;
-    food.user_id = user_id ?? food.user_id;
+
+    food.avatar = filename;
+    food.title = title !== "" ? title : food.title;
+    food.description = description !== "" ? description : food.description;
+    food.category = category !== "" ? category : food.category;
+    food.price = price !== "" ? price : food.price;
+    food.user_id = user_id !== undefined ? user_id : food.user_id;
+
+    console.log(food)
 
     await knex("foods").where({ id }).update(food);
 
-    const existingIngredients = await knex('ingredients')
-    .where({ food_id: id })
-    .select('ingredients');
-  
-  const existingIngredientNames = existingIngredients.map(ingredient => ingredient.ingredients);
-  
-  const ingredientArray = Array.isArray(ingredient) ? ingredient : [ingredient];
-  
- 
-  const hasChanges = !arraysAreEqual(existingIngredientNames, ingredientArray);
-  
-  if (hasChanges) {
+    if (ingredient !== null && ingredient !== undefined && ingredient !== ""){
+      const existingIngredients = await knex('ingredients')
+        .where({ food_id: id })
+        .select('ingredients');
     
-    await knex('ingredients').where({ food_id: id }).del();
-  
-    await knex('ingredients').insert(ingredientArray.map(ingredientName => ({ food_id: id, ingredients: ingredientName })));
-  }
-  
-  function arraysAreEqual(arr1, arr2) {
-    return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
-  }
+      const existingIngredientNames = existingIngredients.map(ingredient => ingredient.ingredients);
+      const ingredientArray = Array.isArray(ingredient) ? ingredient : [ingredient];
     
-
-
-    response.json("Atualizado com sucesso");
-  }
+      const hasChanges = !arraysAreEqual(existingIngredientNames, ingredientArray);
+    
+      if (hasChanges) {
+        await knex('ingredients').where({ food_id: id }).del();
+        await knex('ingredients').insert(ingredientArray.map(ingredientName => ({ food_id: id, ingredients: ingredientName })));
+      }
+    
+      function arraysAreEqual(arr1, arr2) {
+        return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
+      }
+    }}
 
   async index(request, response) {
     try {
